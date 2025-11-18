@@ -12,9 +12,9 @@ Model name is converted to lowercase for the collection name:
 """
 
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, List
 
-# Example schemas (replace with your own):
+# Example schemas (kept for reference):
 
 class User(BaseModel):
     """
@@ -38,8 +38,29 @@ class Product(BaseModel):
     category: str = Field(..., description="Product category")
     in_stock: bool = Field(True, description="Whether product is in stock")
 
-# Add your own schemas here:
-# --------------------------------------------------
+# SaaS PDF chat app schemas
+
+class Document(BaseModel):
+    """Stores a user's uploaded document metadata"""
+    user_id: Optional[str] = Field(None, description="Owner of the document")
+    filename: str = Field(..., description="Original filename")
+    pages: int = Field(..., ge=0, description="Number of pages")
+    chunk_count: int = Field(0, ge=0, description="Number of text chunks")
+    status: str = Field("ready", description="processing status: ready|processing|error")
+
+class Chunk(BaseModel):
+    """Chunk of a document"""
+    doc_id: str = Field(..., description="Reference to the document _id as string")
+    text: str = Field(..., description="Chunk text")
+    index: int = Field(..., ge=0, description="Chunk index order")
+    # Embedding optional; we compute on the fly for lightweight runtime
+    embedding: Optional[List[float]] = Field(None, description="Optional precomputed embedding")
+
+class ChatMessage(BaseModel):
+    """Stores chat messages for analytics/audit (optional)"""
+    doc_id: str
+    role: str = Field(..., description="user|assistant|system")
+    content: str
 
 # Note: The Flames database viewer will automatically:
 # 1. Read these schemas from GET /schema endpoint
